@@ -69,10 +69,9 @@ h1,h2,h3,h4,h5,h6{color:#fff!important}
 [data-testid="stHorizontalBlock"]>[data-testid="stColumn"]{display:flex!important;flex-direction:column!important}
 [data-testid="stHorizontalBlock"]>[data-testid="stColumn"]>div{flex:1!important;display:flex!important;flex-direction:column!important}
 [data-testid="stHorizontalBlock"]>[data-testid="stColumn"]>div>div{flex:1!important}
-[data-testid="stVerticalBlock"]>div{margin-bottom:0.2rem}
+[data-testid="stVerticalBlock"]>div{margin-bottom:0.15rem}
+.block-container{padding-top:1rem!important;padding-bottom:0!important}
 [data-testid="stDeckGlJsonChart"]{height:500px!important;min-height:500px!important}
-.stPlotlyChart{min-height:280px!important}
-.stPlotlyChart>div{min-height:280px!important}
 [data-testid="stDeckGlJsonChart"] iframe{height:500px!important;min-height:500px!important}
 iframe[title="streamlit_autorefresh.st_autorefresh"]{height:0!important;min-height:0!important;border:none!important;overflow:hidden!important;position:absolute!important;visibility:hidden!important}
 [data-testid="stVerticalBlock"]>div:has(iframe[title="streamlit_autorefresh.st_autorefresh"]){height:0!important;min-height:0!important;margin:0!important;padding:0!important;overflow:hidden!important}
@@ -345,8 +344,8 @@ with analytics_col:
         st.markdown(f'<div class="det-row"><span class="det-check">&#10004;</span><span style="flex:1;">{label}</span><span style="font-weight:700;color:{color};font-family:Share Tech Mono,monospace;font-size:clamp(8px,0.9vw,10px);text-align:right;min-width:40px;flex-shrink:0;">{count:,}</span></div>', unsafe_allow_html=True)
 
     st.markdown('<div class="sec-head" style="margin-top:8px;">RISK DISTRIBUTION</div>', unsafe_allow_html=True)
-    fig_d=go.Figure(go.Pie(labels=["LOW","MEDIUM","HIGH"],values=[low,med,high],marker=dict(colors=["#00ff88","#ffc107","#ff6b35"]),hole=0.5,textinfo="percent+label",textposition="outside",textfont=dict(color="#c8e8ff",size=10),outsidetextfont=dict(color="#c8e8ff",size=10)))
-    fig_d.update_layout(template="plotly_dark",paper_bgcolor="rgba(0,0,0,0)",plot_bgcolor="rgba(0,0,0,0)",font=dict(color="#c8e8ff",size=10),margin=dict(t=25,b=25,l=5,r=5),legend=dict(bgcolor="rgba(0,0,0,0)",font=dict(color="#c8e8ff",size=9)),height=180,annotations=[dict(text=f"<b>{total:,}</b>",x=0.5,y=0.5,font=dict(size=14,color="#00d4ff",family="Orbitron"),showarrow=False)])
+    fig_d=go.Figure(go.Pie(labels=["LOW","MEDIUM","HIGH"],values=[low,med,high],marker=dict(colors=["#00ff88","#ffc107","#ff6b35"]),hole=0.5,textinfo="percent",textposition="inside",textfont=dict(color="#0a1628",size=11,family="Inter")))
+    fig_d.update_layout(template="plotly_dark",paper_bgcolor="rgba(0,0,0,0)",plot_bgcolor="rgba(0,0,0,0)",font=dict(color="#c8e8ff",size=10),margin=dict(t=5,b=5,l=5,r=5),legend=dict(bgcolor="rgba(0,0,0,0)",font=dict(color="#c8e8ff",size=9)),height=140,annotations=[dict(text=f"<b>{total:,}</b>",x=0.5,y=0.5,font=dict(size=14,color="#00d4ff",family="Orbitron"),showarrow=False)])
     st.plotly_chart(fig_d,use_container_width=True)
 
     st.markdown('<div class="sec-head" style="margin-top:4px;">RECENT ALERTS</div>', unsafe_allow_html=True)
