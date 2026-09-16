@@ -72,6 +72,8 @@ h1,h2,h3,h4,h5,h6{color:#fff!important}
 [data-testid="stVerticalBlock"]>div{margin-bottom:0.2rem}
 [data-testid="stDeckGlJsonChart"]{height:500px!important;min-height:500px!important}
 [data-testid="stDeckGlJsonChart"] iframe{height:500px!important;min-height:500px!important}
+iframe[title="streamlit_autorefresh.st_autorefresh"]{height:0!important;min-height:0!important;border:none!important;overflow:hidden!important;position:absolute!important;visibility:hidden!important}
+[data-testid="stVerticalBlock"]>div:has(iframe[title="streamlit_autorefresh.st_autorefresh"]){height:0!important;min-height:0!important;margin:0!important;padding:0!important;overflow:hidden!important}
 @media(max-width:640px){.kpi-grid{grid-template-columns:repeat(2,1fr)}.info-card{min-height:auto!important}.header-title{text-align:center}.profile-card{min-height:auto}}
 @media(min-width:641px) and (max-width:1024px){.kpi-grid{grid-template-columns:repeat(3,1fr)}}
 </style>
