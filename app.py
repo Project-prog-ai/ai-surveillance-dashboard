@@ -345,7 +345,7 @@ with analytics_col:
 
     st.markdown('<div class="sec-head" style="margin-top:8px;">RISK DISTRIBUTION</div>', unsafe_allow_html=True)
     fig_d=go.Figure(go.Pie(labels=["LOW","MEDIUM","HIGH"],values=[low,med,high],marker=dict(colors=["#00ff88","#ffc107","#ff6b35"]),hole=0.5,textinfo="percent",textposition="inside",textfont=dict(color="#0a1628",size=11,family="Inter")))
-    fig_d.update_layout(template="plotly_dark",paper_bgcolor="rgba(0,0,0,0)",plot_bgcolor="rgba(0,0,0,0)",font=dict(color="#c8e8ff",size=10),margin=dict(t=5,b=5,l=5,r=5),legend=dict(bgcolor="rgba(0,0,0,0)",font=dict(color="#c8e8ff",size=9)),height=140,annotations=[dict(text=f"<b>{total:,}</b>",x=0.5,y=0.5,font=dict(size=14,color="#00d4ff",family="Orbitron"),showarrow=False)])
+    fig_d.update_layout(template="plotly_dark",paper_bgcolor="rgba(0,0,0,0)",plot_bgcolor="rgba(0,0,0,0)",font=dict(color="#c8e8ff",size=10),margin=dict(t=5,b=5,l=5,r=5),height=200,showlegend=True,legend=dict(bgcolor="rgba(0,0,0,0)",x=1,y=0.5,font=dict(color="#c8e8ff",size=9)),annotations=[dict(text=f"<b>{total:,}</b>",x=0.5,y=0.5,font=dict(size=14,color="#00d4ff",family="Orbitron"),showarrow=False)])
     st.plotly_chart(fig_d,use_container_width=True)
 
     st.markdown('<div class="sec-head" style="margin-top:4px;">RECENT ALERTS</div>', unsafe_allow_html=True)
@@ -373,13 +373,13 @@ with tab_overview:
         rc=df["RISK_LEVEL"].value_counts().reset_index(); rc.columns=["Risk Level","Vehicles"]
         fig=px.bar(rc,x="Risk Level",y="Vehicles",color="Risk Level",text="Vehicles",color_discrete_map=CLR)
         fig.update_traces(textposition="outside",textfont=dict(color="white",size=11),cliponaxis=False)
-        fig.update_layout(**PLT,height=280,showlegend=False,xaxis={**AX},yaxis={**AX})
+        fig.update_layout(**PLT,height=380,showlegend=False,xaxis={**AX},yaxis={**AX})
         st.plotly_chart(fig,use_container_width=True)
     with c2:
         st.markdown('<div style="font-size:clamp(9px,1vw,11px);font-weight:700;color:#7ab8e8;letter-spacing:1px;margin-bottom:4px;">SPEED VS RISK SCORE</div>', unsafe_allow_html=True)
         samp=df.sample(min(1500,len(df)),random_state=42)
         fig=px.scatter(samp,x="AVG_SPEED_KMH",y="RISK_SCORE",color="RISK_LEVEL",color_discrete_map=CLR,opacity=0.6,labels={"AVG_SPEED_KMH":"Avg Speed (km/h)","RISK_SCORE":"Risk Score","RISK_LEVEL":"Risk Level"})
-        fig.update_layout(**PLT,height=280,xaxis={**AX},yaxis={**AX})
+        fig.update_layout(**PLT,height=380,xaxis={**AX},yaxis={**AX})
         st.plotly_chart(fig,use_container_width=True)
     c3,c4=st.columns(2)
     with c3:
@@ -387,14 +387,14 @@ with tab_overview:
         tt=df["TRIP_TYPE"].value_counts().reset_index(); tt.columns=["Type","Count"]
         fig=px.bar(tt,x="Type",y="Count",color="Count",text="Count",color_continuous_scale="Blues")
         fig.update_traces(textposition="outside",textfont=dict(color="white"),cliponaxis=False)
-        fig.update_layout(**PLT,height=280,showlegend=False,xaxis={**AX},yaxis={**AX})
+        fig.update_layout(**PLT,height=380,showlegend=False,xaxis={**AX},yaxis={**AX})
         st.plotly_chart(fig,use_container_width=True)
     with c4:
         st.markdown('<div style="font-size:clamp(9px,1vw,11px);font-weight:700;color:#7ab8e8;letter-spacing:1px;margin-bottom:4px;">ANOMALY FLAGS OVERVIEW</div>', unsafe_allow_html=True)
         fdf=pd.DataFrame({"Flag":["Parking","Speed","Route Dev","Zone","Coordinated"],"Count":[pk,sp,rd,rz,cm]}).sort_values("Count",ascending=True)
         fig=px.bar(fdf,y="Flag",x="Count",orientation="h",color="Count",text="Count",color_continuous_scale="Reds")
         fig.update_traces(textposition="outside",textfont=dict(color="white"),cliponaxis=False)
-        fig.update_layout(**PLT,height=280,showlegend=False,xaxis={**AX},yaxis={**AX})
+        fig.update_layout(**PLT,height=380,showlegend=False,xaxis={**AX},yaxis={**AX})
         st.plotly_chart(fig,use_container_width=True)
     m1=st.columns(3)
     for col,lbl,val,clr in [(m1[0],"Avg Risk Score",avg_risk,"#ffc107"),(m1[1],"Max Risk",max_risk,"#ff1744"),(m1[2],"Avg Speed km/h",avg_spd,"#00d4ff")]:
