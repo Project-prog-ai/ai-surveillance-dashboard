@@ -71,6 +71,8 @@ h1,h2,h3,h4,h5,h6{color:#fff!important}
 [data-testid="stHorizontalBlock"]>[data-testid="stColumn"]>div>div{flex:1!important}
 [data-testid="stVerticalBlock"]>div{margin-bottom:0.2rem}
 [data-testid="stDeckGlJsonChart"]{height:500px!important;min-height:500px!important}
+.stPlotlyChart{min-height:280px!important}
+.stPlotlyChart>div{min-height:280px!important}
 [data-testid="stDeckGlJsonChart"] iframe{height:500px!important;min-height:500px!important}
 iframe[title="streamlit_autorefresh.st_autorefresh"]{height:0!important;min-height:0!important;border:none!important;overflow:hidden!important;position:absolute!important;visibility:hidden!important}
 [data-testid="stVerticalBlock"]>div:has(iframe[title="streamlit_autorefresh.st_autorefresh"]){height:0!important;min-height:0!important;margin:0!important;padding:0!important;overflow:hidden!important}
