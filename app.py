@@ -70,6 +70,8 @@ h1,h2,h3,h4,h5,h6{color:#fff!important}
 [data-testid="stHorizontalBlock"]>[data-testid="stColumn"]>div{flex:1!important;display:flex!important;flex-direction:column!important}
 [data-testid="stHorizontalBlock"]>[data-testid="stColumn"]>div>div{flex:1!important}
 [data-testid="stVerticalBlock"]>div{margin-bottom:0.2rem}
+[data-testid="stDeckGlJsonChart"]{height:500px!important;min-height:500px!important}
+[data-testid="stDeckGlJsonChart"] iframe{height:500px!important;min-height:500px!important}
 @media(max-width:640px){.kpi-grid{grid-template-columns:repeat(2,1fr)}.info-card{min-height:auto!important}.header-title{text-align:center}.profile-card{min-height:auto}}
 @media(min-width:641px) and (max-width:1024px){.kpi-grid{grid-template-columns:repeat(3,1fr)}}
 </style>
@@ -250,6 +252,10 @@ circular=int((df["CIRCUITY_RATIO"]>1.5).sum()) if "CIRCUITY_RATIO" in df.columns
 abnormal=int((df["PARKING_DURATION_MIN"]>60).sum()) if "PARKING_DURATION_MIN" in df.columns else 0
 recent_alerts=df.nlargest(4,"RISK_SCORE")[["TRIP_ID","RISK_LEVEL","RISK_SCORE"]].values.tolist()
 
+# AUTO-REFRESH (top-level to avoid layout shifts)
+if st.session_state.live_mode:
+    st_autorefresh(interval=5000, limit=None, key="live_refresh")
+
 # HEADER
 h_left,h_center,h_right = st.columns([2.5,6.5,2])
 with h_left:
@@ -276,8 +282,7 @@ with h_right:
                 st.session_state.sim_counter = 0
                 st.session_state.sim_log = []
             st.rerun()
-        if st.session_state.live_mode:
-            st_autorefresh(interval=5000, limit=None, key="live_refresh")
+
     with hr2:
         if st.session_state.live_mode:
             sim_count = len(st.session_state.sim_trips)
@@ -337,7 +342,7 @@ with analytics_col:
 
     st.markdown('<div class="sec-head" style="margin-top:8px;">RISK DISTRIBUTION</div>', unsafe_allow_html=True)
     fig_d=go.Figure(go.Pie(labels=["LOW","MEDIUM","HIGH"],values=[low,med,high],marker=dict(colors=["#00ff88","#ffc107","#ff6b35"]),hole=0.5,textinfo="percent+label",textposition="outside",textfont=dict(color="#c8e8ff",size=10),outsidetextfont=dict(color="#c8e8ff",size=10)))
-    fig_d.update_layout(template="plotly_dark",paper_bgcolor="rgba(0,0,0,0)",plot_bgcolor="rgba(0,0,0,0)",font=dict(color="#c8e8ff",size=10),margin=dict(t=5,b=5,l=5,r=5),legend=dict(bgcolor="rgba(0,0,0,0)",font=dict(color="#c8e8ff",size=9)),height=120,annotations=[dict(text=f"<b>{total:,}</b>",x=0.5,y=0.5,font=dict(size=14,color="#00d4ff",family="Orbitron"),showarrow=False)])
+    fig_d.update_layout(template="plotly_dark",paper_bgcolor="rgba(0,0,0,0)",plot_bgcolor="rgba(0,0,0,0)",font=dict(color="#c8e8ff",size=10),margin=dict(t=25,b=25,l=5,r=5),legend=dict(bgcolor="rgba(0,0,0,0)",font=dict(color="#c8e8ff",size=9)),height=180,annotations=[dict(text=f"<b>{total:,}</b>",x=0.5,y=0.5,font=dict(size=14,color="#00d4ff",family="Orbitron"),showarrow=False)])
     st.plotly_chart(fig_d,use_container_width=True)
 
     st.markdown('<div class="sec-head" style="margin-top:4px;">RECENT ALERTS</div>', unsafe_allow_html=True)
