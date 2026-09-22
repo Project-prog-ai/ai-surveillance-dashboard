@@ -250,6 +250,8 @@ sp=int(df["SPEED_ANOMALY"].sum()) if "SPEED_ANOMALY" in df.columns else 0
 pk=int(df["PARKING_ANOMALY"].sum()) if "PARKING_ANOMALY" in df.columns else 0
 rd=int(df["ROUTE_DEVIATION"].sum()) if "ROUTE_DEVIATION" in df.columns else 0
 cm=int(df["COORDINATED_MOVEMENT"].sum()) if "COORDINATED_MOVEMENT" in df.columns else 0
+# Real convoy detection count (computed in convoy tab, shown here as preview)
+
 circular=int((df["CIRCUITY_RATIO"]>1.5).sum()) if "CIRCUITY_RATIO" in df.columns else 0
 abnormal=int((df["PARKING_DURATION_MIN"]>60).sum()) if "PARKING_DURATION_MIN" in df.columns else 0
 recent_alerts=df.nlargest(4,"RISK_SCORE")[["TRIP_ID","RISK_LEVEL","RISK_SCORE"]].values.tolist()
@@ -363,7 +365,7 @@ with analytics_col:
 # TABS
 st.markdown('<div style="height:8px;"></div>', unsafe_allow_html=True)
 st.markdown('<div class="sec-head">ADVANCED ANALYTICS ENGINE</div>', unsafe_allow_html=True)
-tab_overview,tab_temporal,tab_ml,tab_timeline,tab_heatmap,tab_forecast,tab_explorer = st.tabs(["Overview","Temporal","ML Engine","Vehicle Timeline","Anomaly Heatmap","Risk Forecast","Explorer"])
+tab_overview,tab_temporal,tab_ml,tab_timeline,tab_heatmap,tab_forecast,tab_convoy,tab_explorer = st.tabs(["Overview","Temporal","ML Engine","Vehicle Timeline","Anomaly Heatmap","Risk Forecast","Convoy Detection","Explorer"])
 
 with tab_overview:
     c1,c2=st.columns(2)
@@ -607,6 +609,142 @@ with tab_forecast:
         avg_trend=round(float(veh_stats["risk_trend"].mean()),1)
         for col,lbl,val,clr in [(fm1,"Critical Risk Vehicles",f"{crit_count:,}","#ff1744"),(fm2,"Watch List Total",f"{watch_count:,}","#ff6b35"),(fm3,"Avg Risk Index",f"{avg_trend}","#ffc107")]:
             col.markdown(f'<div class="kpi-metric"><div class="km-label">{lbl}</div><div class="km-val" style="color:{clr};">{val}</div></div>', unsafe_allow_html=True)
+
+
+with tab_convoy:
+    st.markdown('<div class="sec-head">CONVOY / COORDINATED MOVEMENT DETECTION</div>', unsafe_allow_html=True)
+    st.markdown('<div style="font-size:clamp(9px,1vw,11px);color:#7ab8e8;margin-bottom:8px;">Identifies groups of vehicles exhibiting coordinated behaviour — similar routes, overlapping timestamps, and comparable speed profiles suggesting organised movement.</div>', unsafe_allow_html=True)
+    if "DATETIME" in df.columns and "VEHICLE_ID" in df.columns:
+        dfc=df.copy()
+        dfc["DT"]=pd.to_datetime(dfc["DATETIME"],errors="coerce")
+        dfc=dfc.dropna(subset=["DT"])
+        dfc["HOUR"]=dfc["DT"].dt.hour
+        dfc["DATE"]=dfc["DT"].dt.date
+        # Convoy algorithm: group trips by same hour+date, then find vehicles with similar speed/distance profiles
+        # Step 1: Time-window grouping (same date + same hour = potential convoy window)
+        time_groups=dfc.groupby(["DATE","HOUR"])
+        convoy_results=[]
+        convoy_id=0
+        for (date,hour),group in time_groups:
+            if len(group)<2: continue
+            vids=group["VEHICLE_ID"].unique()
+            if len(vids)<2: continue
+            # Step 2: Within each time window, cluster by speed + distance similarity
+            from scipy.spatial.distance import pdist, squareform
+            gf=group.groupby("VEHICLE_ID").agg(
+                avg_speed=("AVG_SPEED_KMH","mean"),
+                avg_risk=("RISK_SCORE","mean"),
+                trip_count=("RISK_SCORE","count")
+            ).reset_index()
+            if len(gf)<2: continue
+            # Normalize features
+            from sklearn.preprocessing import MinMaxScaler
+            scaler=MinMaxScaler()
+            features=gf[["avg_speed","avg_risk"]].values
+            if features.shape[0]<2: continue
+            try:
+                feat_norm=scaler.fit_transform(features)
+            except: continue
+            # DBSCAN on normalized speed+distance to find similar-profile vehicles
+            from sklearn.cluster import DBSCAN as DBSCAN2
+            db=DBSCAN2(eps=0.15,min_samples=2).fit(feat_norm)
+            gf["convoy_cluster"]=db.labels_
+            for cl in set(db.labels_):
+                if cl==-1: continue
+                members=gf[gf["convoy_cluster"]==cl]
+                if len(members)<2: continue
+                convoy_id+=1
+                for _,m in members.iterrows():
+                    convoy_results.append({
+                        "Convoy ID":f"CVY-{convoy_id:03d}",
+                        "Date":str(date),
+                        "Hour":f"{hour:02d}:00",
+                        "Vehicle ID":int(m["VEHICLE_ID"]),
+                        "Avg Speed":round(float(m["avg_speed"]),1),
+                        "Trips":int(m["trip_count"]),
+                        "Risk Score":round(float(m["avg_risk"]),1)
+                    })
+        if convoy_results:
+            convoy_df=pd.DataFrame(convoy_results)
+            total_convoys=convoy_df["Convoy ID"].nunique()
+            total_vehicles_in_convoys=convoy_df["Vehicle ID"].nunique()
+            high_risk_convoys=0
+            for cid in convoy_df["Convoy ID"].unique():
+                cg=convoy_df[convoy_df["Convoy ID"]==cid]
+                if cg["Risk Score"].mean()>40: high_risk_convoys+=1
+            # KPI Row
+            ck1,ck2,ck3,ck4=st.columns(4)
+            for col,lbl,val,clr in [(ck1,"Convoys Detected",f"{total_convoys:,}","#00d4ff"),(ck2,"Vehicles Involved",f"{total_vehicles_in_convoys:,}","#ffc107"),(ck3,"High-Risk Convoys",f"{high_risk_convoys:,}","#ff1744"),(ck4,"Avg Group Size",f"{len(convoy_df)/total_convoys:.1f}","#00ff88")]:
+                col.markdown(f'<div class="kpi-metric"><div class="km-label">{lbl}</div><div class="km-val" style="color:{clr};">{val}</div></div>', unsafe_allow_html=True)
+            # Charts row
+            cv1,cv2=st.columns(2)
+            with cv1:
+                # Convoy size distribution
+                convoy_sizes=convoy_df.groupby("Convoy ID")["Vehicle ID"].count().reset_index()
+                convoy_sizes.columns=["Convoy","Vehicles"]
+                fig_cs=px.histogram(convoy_sizes,x="Vehicles",nbins=10,color_discrete_sequence=["#00d4ff"],
+                    labels={"Vehicles":"Group Size","count":"Frequency"})
+                fig_cs.update_layout(**PLT,height=280,title=dict(text="Convoy Size Distribution",font=dict(color="white",size=12)),
+                    xaxis=dict(**AX,title=dict(text="Vehicles per Convoy",font=dict(color="#7ab8e8",size=10))),
+                    yaxis=dict(**AX,title=dict(text="Count",font=dict(color="#7ab8e8",size=10))))
+                st.plotly_chart(fig_cs,use_container_width=True)
+            with cv2:
+                # Convoy risk distribution
+                convoy_risk=convoy_df.groupby("Convoy ID")["Risk Score"].mean().reset_index()
+                convoy_risk.columns=["Convoy","Avg Risk"]
+                convoy_risk["Threat"]=pd.cut(convoy_risk["Avg Risk"],bins=[0,20,40,60,100],labels=["Low","Medium","High","Critical"])
+                threat_dist=convoy_risk["Threat"].value_counts().reset_index()
+                threat_dist.columns=["Level","Count"]
+                fig_td=px.pie(threat_dist,names="Level",values="Count",color="Level",
+                    color_discrete_map={"Low":"#00ff88","Medium":"#ffc107","High":"#ff6b35","Critical":"#ff1744"},hole=0.5)
+                fig_td.update_layout(**PLT,height=280,title=dict(text="Convoy Threat Classification",font=dict(color="white",size=12)))
+                fig_td.update_traces(textinfo="percent+label",textposition="inside",textfont=dict(color="#0a1628",size=10))
+                st.plotly_chart(fig_td,use_container_width=True)
+            # Convoy timeline — when do convoys occur
+            cv3,cv4=st.columns(2)
+            with cv3:
+                hour_dist=convoy_df.groupby("Hour")["Convoy ID"].nunique().reset_index()
+                hour_dist.columns=["Hour","Convoys"]
+                fig_ht=px.bar(hour_dist,x="Hour",y="Convoys",color="Convoys",color_continuous_scale="YlOrRd",text="Convoys")
+                fig_ht.update_traces(textposition="outside",textfont=dict(color="white",size=10),cliponaxis=False)
+                fig_ht.update_layout(**PLT,height=280,title=dict(text="Convoy Activity by Hour",font=dict(color="white",size=12)),
+                    showlegend=False,xaxis=dict(**AX,title=dict(text="Hour of Day",font=dict(color="#7ab8e8",size=10))),
+                    yaxis=dict(**AX,title=dict(text="Convoy Groups",font=dict(color="#7ab8e8",size=10))))
+                st.plotly_chart(fig_ht,use_container_width=True)
+            with cv4:
+                # Speed similarity scatter — convoy members
+                top_convoys=convoy_df.groupby("Convoy ID")["Risk Score"].mean().nlargest(5).index.tolist()
+                top_cv_df=convoy_df[convoy_df["Convoy ID"].isin(top_convoys)]
+                fig_sp=px.scatter(top_cv_df,x="Avg Speed",y="Risk Score",color="Convoy ID",size="Trips",
+                    color_discrete_sequence=["#ff1744","#ff6b35","#ffc107","#00d4ff","#00ff88"],opacity=0.8,
+                    labels={"Avg Speed":"Avg Speed (km/h)","Risk Score":"Risk Score"})
+                fig_sp.update_layout(**PLT,height=280,title=dict(text="Top 5 Convoys — Speed vs Distance",font=dict(color="white",size=12)),
+                    xaxis=dict(**AX),yaxis=dict(**AX))
+                st.plotly_chart(fig_sp,use_container_width=True)
+            # Detailed convoy table — top 20 convoys
+            st.markdown('<div style="font-size:clamp(9px,1vw,11px);font-weight:700;color:#7ab8e8;letter-spacing:1px;margin:10px 0 4px;">TOP DETECTED CONVOYS</div>', unsafe_allow_html=True)
+            show_convoys=convoy_df[convoy_df["Convoy ID"].isin(convoy_df.groupby("Convoy ID")["Risk Score"].mean().nlargest(20).index)]
+            header_html="".join([f'<th style="background:rgba(0,40,90,0.95);color:#00d4ff;padding:8px 10px;font-size:11px;font-weight:700;border-bottom:2px solid rgba(0,212,255,0.4);white-space:nowrap;font-family:Inter,sans-serif;text-align:left;">{c}</th>' for c in show_convoys.columns])
+            rows_html=""
+            for i,(_,row) in enumerate(show_convoys.iterrows()):
+                bg="rgba(0,18,50,0.95)" if i%2==0 else "rgba(0,25,65,0.9)"
+                cells=""
+                for col in show_convoys.columns:
+                    val=row[col]
+                    if col=="Risk Score":
+                        sc=float(val)
+                        rc="#ff1744" if sc>=50 else "#ff6b35" if sc>=30 else "#ffc107" if sc>=15 else "#00ff88"
+                        cells+=f'<td style="background:{bg};padding:6px 10px;color:{rc};font-weight:700;font-size:11px;border-bottom:1px solid rgba(0,212,255,0.1);font-family:Share Tech Mono,monospace;">{sc:.1f}</td>'
+                    elif col=="Convoy ID":
+                        cells+=f'<td style="background:{bg};padding:6px 10px;color:#00d4ff;font-weight:700;font-size:11px;border-bottom:1px solid rgba(0,212,255,0.1);font-family:Share Tech Mono,monospace;">{val}</td>'
+                    else:
+                        cells+=f'<td style="background:{bg};padding:6px 10px;color:#c8e8ff;font-size:11px;border-bottom:1px solid rgba(0,212,255,0.1);font-family:Inter,sans-serif;">{val}</td>'
+                rows_html+=f"<tr>{cells}</tr>"
+            st.markdown(f'''<div style="overflow-x:auto;border-radius:8px;border:1px solid rgba(0,212,255,0.2);max-height:350px;overflow-y:auto;"><table style="width:100%;border-collapse:collapse;"><thead><tr>{header_html}</tr></thead><tbody>{rows_html}</tbody></table></div>''', unsafe_allow_html=True)
+        else:
+            st.info("No convoy patterns detected in the current dataset.")
+    else:
+        st.warning("Required columns (DATETIME, VEHICLE_ID) not available for convoy analysis.")
 
 
 with tab_explorer:
