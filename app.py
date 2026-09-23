@@ -265,7 +265,7 @@ h_left,h_center,h_right = st.columns([2.5,6.5,2])
 with h_left:
     st.markdown("""<div style="display:flex;align-items:center;gap:12px;">
       <div style="width:32px;height:32px;background:rgba(0,212,255,0.1);border:1px solid rgba(0,212,255,0.5);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:16px;box-shadow:0 0 10px rgba(0,212,255,0.3);flex-shrink:0;">&#128659;</div>
-      <div><div class="header-title">AI POWERED SMART SURVEILLANCE</div><div class="header-sub">SUSPICIOUS VEHICLE DETECTION SYSTEM</div></div>
+      <div><div class="header-title">AI ENABLED SMART SURVEILLANCE</div><div class="header-sub">SUSPICIOUS VEHICLE DETECTION SYSTEM</div></div>
     </div>""", unsafe_allow_html=True)
 with h_center:
     st.markdown(f"""<div class="kpi-grid">
@@ -827,6 +827,6 @@ with b4:
     </div></div>""", unsafe_allow_html=True)
 
 st.markdown("""<div class="footer-strip">
-<span style="font-family:Orbitron,monospace;font-size:clamp(7px,0.8vw,9px);color:#00d4ff;letter-spacing:2px;">AI POWERED SMART SURVEILLANCE v5.0</span>
+<span style="font-family:Orbitron,monospace;font-size:clamp(7px,0.8vw,9px);color:#00d4ff;letter-spacing:2px;">AI ENABLED SMART SURVEILLANCE v5.0</span>
 <span style="font-size:clamp(7px,0.8vw,9px);color:#7ab8e8;"> | Python - Streamlit - Plotly - Scikit-Learn</span>
 </div>""", unsafe_allow_html=True)
