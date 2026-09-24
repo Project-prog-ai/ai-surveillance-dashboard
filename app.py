@@ -365,7 +365,7 @@ with analytics_col:
 # TABS
 st.markdown('<div style="height:8px;"></div>', unsafe_allow_html=True)
 st.markdown('<div class="sec-head">ADVANCED ANALYTICS ENGINE</div>', unsafe_allow_html=True)
-tab_overview,tab_temporal,tab_ml,tab_timeline,tab_heatmap,tab_forecast,tab_convoy,tab_explorer = st.tabs(["Overview","Temporal","ML Engine","Vehicle Timeline","Anomaly Heatmap","Risk Forecast","Convoy Detection","Explorer"])
+tab_overview,tab_temporal,tab_ml,tab_timeline,tab_heatmap,tab_forecast,tab_convoy,tab_explorer = st.tabs(["Overview","Temporal","ML Engine","Vehicle Timeline","Anomaly Heatmap","Risk Trend","Convoy Detection","Explorer"])
 
 with tab_overview:
     c1,c2=st.columns(2)
@@ -554,7 +554,7 @@ with tab_heatmap:
         col.markdown(f'<div class="kpi-metric"><div class="km-label">{lbl}</div><div class="km-val" style="color:{clr};font-size:clamp(12px,1.4vw,18px);">{val}</div></div>', unsafe_allow_html=True)
 
 with tab_forecast:
-    st.markdown('<div class="sec-head">PREDICTIVE RISK FORECAST</div>', unsafe_allow_html=True)
+    st.markdown('<div class="sec-head">RISK TREND ANALYSIS</div>', unsafe_allow_html=True)
     st.markdown('<div style="font-size:clamp(9px,1vw,11px);color:#7ab8e8;margin-bottom:8px;">Identifies vehicles most likely to escalate to HIGH risk based on behavioral patterns and flag accumulation trends.</div>', unsafe_allow_html=True)
     if "VEHICLE_ID" in df.columns:
         veh_stats=df.groupby("VEHICLE_ID").agg(
@@ -576,7 +576,7 @@ with tab_forecast:
             fig_fc.add_trace(go.Bar(x=top_risky["VEHICLE_ID"].astype(str),y=top_risky["risk_trend"],
                 marker_color=colors,text=top_risky["risk_trend"].apply(lambda x:f"{x:.0f}"),textposition="outside",textfont=dict(color="white",size=10)))
             fig_fc.add_hline(y=60,line_dash="dash",line_color="rgba(255,23,68,0.5)",annotation_text="CRITICAL THRESHOLD",annotation_font_color="#ff1744",annotation_font_size=9)
-            fig_fc.update_layout(**PLT,height=350,title=dict(text="Top 15 Vehicles by Predicted Risk Score",font=dict(color="white",size=12)),
+            fig_fc.update_layout(**PLT,height=350,title=dict(text="Top 15 Vehicles by Risk Trend Score",font=dict(color="white",size=12)),
                 xaxis=dict(**AX,title=dict(text="Vehicle ID",font=dict(color="#7ab8e8",size=10)),tickangle=-45),
                 yaxis=dict(**AX,title=dict(text="Composite Risk Index",font=dict(color="#7ab8e8",size=10))))
             st.plotly_chart(fig_fc,use_container_width=True)
@@ -602,7 +602,7 @@ with tab_forecast:
             rb_counts=risk_bins.value_counts().reset_index(); rb_counts.columns=["Category","Vehicles"]
             fig_rb=px.pie(rb_counts,names="Category",values="Vehicles",color="Category",
                 color_discrete_map={"Low":"#00ff88","Medium":"#ffc107","High":"#ff6b35","Critical":"#ff1744"},hole=0.5)
-            fig_rb.update_layout(**PLT,height=300,title=dict(text="Vehicle Risk Distribution (Predicted)",font=dict(color="white",size=11)))
+            fig_rb.update_layout(**PLT,height=300,title=dict(text="Vehicle Risk Distribution (Trend)",font=dict(color="white",size=11)))
             st.plotly_chart(fig_rb,use_container_width=True)
         fm1,fm2,fm3=st.columns(3)
         crit_count=int((veh_stats["risk_trend"]>60).sum()); watch_count=int((veh_stats["risk_trend"]>40).sum())
@@ -785,10 +785,10 @@ with b1:
     st.markdown("""<div class="info-card"><h4>&#9889; SYSTEM ARCHITECTURE</h4>
     <div style="font-size:clamp(10px,1.1vw,13px);color:#c8e8ff;font-family:Inter,sans-serif;line-height:2.2;">
       <div>&#128663; Vehicle Simulator</div>
-      <div>&#128225; MQTT Streaming Broker</div>
-      <div style="color:#00ff88;">&#9889; FastAPI Backend</div>
+      <div>&#128225; MQTT Broker (design-intent)</div>
+      <div style="color:#7ab8e8;">&#9889; FastAPI (design-intent)</div>
       <div style="color:#ffc107;">&#129302; AI Engine (IF + DBSCAN)</div>
-      <div>&#128451; PostgreSQL Database</div>
+      <div>&#128451; PostgreSQL (design-intent)</div>
       <div>&#128200; Rule-Based Analytics</div>
       <div style="color:#00d4ff;">&#128202; Streamlit Dashboard</div>
     </div></div>""", unsafe_allow_html=True)
