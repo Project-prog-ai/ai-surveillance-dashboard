@@ -1,0 +1,2 @@
+Total Records,Data Loading (s),Scaling (s),IF Time (s),IF Memory (MB),DBSCAN Time (s),DBSCAN Memory (MB)
+19599,0.025,0.0025,0.431,2.06,0.636,5.14
