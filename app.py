@@ -185,7 +185,7 @@ def generate_live_trips(base_df, n=3):
         if risk_score >= 70: risk_level = "HIGH"
         elif risk_score >= 40: risk_level = "MEDIUM"
         now_ts = datetime.now() - timedelta(seconds=int(rng.integers(0, 30)))
-        trip_id = f"LIVE-{st.session_state.sim_counter + _:06d}"
+        trip_id = f"LIVE SIMULATION-{st.session_state.sim_counter + _:06d}"
         row = {
             "VEHICLE_ID": vid, "TRIP_ID": trip_id,
             "TIMESTAMP": now_ts, "DATETIME": now_ts,
