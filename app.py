@@ -269,7 +269,7 @@ with h_left:
     </div>""", unsafe_allow_html=True)
 with h_center:
     st.markdown(f"""<div class="kpi-grid">
-      <div class="kpi-card"><div class="kpi-icon">&#128663;</div><div class="kpi-label">Total Vehicles</div><div class="kpi-value" style="color:#00d4ff;">{total:,}</div></div>
+      <div class="kpi-card"><div class="kpi-icon">&#128663;</div><div class="kpi-label">Total Trips</div><div class="kpi-value" style="color:#00d4ff;">{total:,}</div></div>
       <div class="kpi-card"><div class="kpi-icon">&#128994;</div><div class="kpi-label">Low Risk</div><div class="kpi-value" style="color:#00ff88;">{low:,}</div></div>
       <div class="kpi-card"><div class="kpi-icon">&#9888;&#65039;</div><div class="kpi-label">Medium Risk</div><div class="kpi-value" style="color:#ffc107;">{med:,}</div></div>
       <div class="kpi-card"><div class="kpi-icon">&#128314;</div><div class="kpi-label">High Risk</div><div class="kpi-value" style="color:#ff6b35;">{high:,}</div></div>
