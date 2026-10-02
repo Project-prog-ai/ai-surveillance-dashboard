@@ -258,7 +258,7 @@ recent_alerts=df.nlargest(4,"RISK_SCORE")[["TRIP_ID","RISK_LEVEL","RISK_SCORE"]]
 
 # AUTO-REFRESH (top-level to avoid layout shifts)
 if st.session_state.live_mode:
-    st_autorefresh(interval=5000, limit=None, key="live_refresh")
+    st_autorefresh(interval=10000, limit=None, key="live_refresh")
 
 # HEADER
 h_left,h_center,h_right = st.columns([2.5,6.5,2])
@@ -269,7 +269,7 @@ with h_left:
     </div>""", unsafe_allow_html=True)
 with h_center:
     st.markdown(f"""<div class="kpi-grid">
-      <div class="kpi-card"><div class="kpi-icon">&#128663;</div><div class="kpi-label">Total Trips</div><div class="kpi-value" style="color:#00d4ff;">{total:,}</div></div>
+      <div class="kpi-card"><div class="kpi-icon">&#128663;</div><div class="kpi-label">Total Vehicles</div><div class="kpi-value" style="color:#00d4ff;">{total:,}</div></div>
       <div class="kpi-card"><div class="kpi-icon">&#128994;</div><div class="kpi-label">Low Risk</div><div class="kpi-value" style="color:#00ff88;">{low:,}</div></div>
       <div class="kpi-card"><div class="kpi-icon">&#9888;&#65039;</div><div class="kpi-label">Medium Risk</div><div class="kpi-value" style="color:#ffc107;">{med:,}</div></div>
       <div class="kpi-card"><div class="kpi-icon">&#128314;</div><div class="kpi-label">High Risk</div><div class="kpi-value" style="color:#ff6b35;">{high:,}</div></div>
@@ -278,7 +278,7 @@ with h_center:
 with h_right:
     hr1,hr2 = st.columns([1,1.4])
     with hr1:
-        live_on = st.toggle("Live Simulation", value=st.session_state.live_mode, key="live_toggle")
+        live_on = st.toggle("Live", value=st.session_state.live_mode, key="live_toggle")
         if live_on != st.session_state.live_mode:
             st.session_state.live_mode = live_on
             if not live_on:
@@ -306,9 +306,11 @@ st.markdown('<div style="height:2px;background:linear-gradient(90deg,transparent
 map_col,analytics_col = st.columns([6.5,3.5])
 with map_col:
     map_sample = st.slider("Map Sample Size",100,800,350,50,key="mapsz",help="Vehicles on map")
-    @st.cache_data(max_entries=1, ttl=5 if st.session_state.get("live_mode") else 300)
-    def build_map_data(n, _live_tick=0):
-        if not st.session_state.get("live_mode"): np.random.seed(42)
+    _is_live = st.session_state.get("live_mode", False)
+    _live_tick = st.session_state.get('sim_counter', 0)
+    @st.cache_data(max_entries=2, ttl=10 if _is_live else 300)
+    def build_map_data(n, live_tick=0, is_live=False):
+        if not is_live: np.random.seed(42)
         plat,plon=41.1579,-8.6291
         lats=plat+np.random.uniform(-0.05,0.05,n); lons=plon+np.random.uniform(-0.08,0.08,n)
         risks=np.random.choice(["LOW","MEDIUM","HIGH"],size=n,p=[0.697,0.282,0.021])
@@ -319,7 +321,7 @@ with map_col:
         map_df["size"]=map_df["risk"].map(size_map)
         return map_df
     import pydeck as pdk
-    map_df=build_map_data(map_sample, _live_tick=st.session_state.get('sim_counter',0))
+    map_df=build_map_data(map_sample, live_tick=_live_tick, is_live=_is_live)
     layer=pdk.Layer("ScatterplotLayer",data=map_df,get_position=["lon","lat"],get_color="color",
         get_radius="size",radius_scale=15,radius_min_pixels=2,radius_max_pixels=7,pickable=True,
         auto_highlight=True)
